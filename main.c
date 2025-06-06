@@ -1,93 +1,167 @@
-#include <stdio.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <locale.h>
 
-int main() {
-  int A[4][5] = {
-    {1,2,1,0,1},
-    {0,1,1,1,1},
-    {0,2,1,0,1},
-    {2,1,0,2,1}
-  };
-
-  int B[5][5] = {
-    {1,1,0,1,0},
-    {0,2,1,2,1},
-    {1,1,0,2,1},
-    {0,1,1,1,1},
-    {0,1,2,3,2}
-  };
-
-  int C[5][5];
-
-  int a_len = sizeof(A[0]) / sizeof(A[0][0]);
-  int b_len = sizeof(B) / sizeof(B[0]);
-
-  printf("The A length is %d\nThe B length is %d\n", a_len, b_len);
-
-  if (a_len != b_len) {
-      printf("The matrices n size doesn't matches.");
-      return 0;
+int** alloc_matrix(int rows, int cols) {
+  int** ptr = malloc(rows * sizeof(int*));
+  if (!ptr) {
+    printf("Falha na alocação do ponteiro da matrix 2D\n");
+    return NULL;
   }
 
-  for(int k = 0; k < a_len; k++) {
-    int i = 0;
-    
-    while (i < a_len) {
-      int j = 0;
-      int sum = 0;
-
-      while (j < a_len) {
-        sum = sum + (A[k][j] * B[j][i]);
-        j++;
+  for (int i = 0; i < rows; i++) {
+    ptr[i] = malloc(cols * sizeof(int));
+    if (!ptr[i]) {
+      printf("A alocação de ptr[%d] falhou.\n", i);
+      for (int j = 0; j < i; j++) {
+        free(ptr[j]);
       }
-      
-      C[k][i] = sum;
-      i++;
+      free(ptr);
+      return NULL;
     }
-  }  
+  }
+
+  printf("Alocação concluída nas dimensões %dx%d\n", rows, cols);
+  return ptr;
+}
+
+void free_matrix(int** ptr, int rows) {
+  if (ptr == NULL) return;
   
-  int c_len = sizeof(A) / sizeof(A[0]);
-  int d_len = sizeof(B[0]) / sizeof(B[0][0]);
-   
-  for (int p = 0; p < c_len; p++) {
-    for (int q = 0; q < d_len; q++) {
-      bool is_tl = p == 0 && q == 0;
-      bool is_tr = p == 0 && q == d_len - 1;
-      bool is_bl = p == c_len - 1 && q == 0;
-      bool is_br = p == c_len - 1 && q == d_len - 1;
-      bool is_middle_line = 0 < p && p < c_len - 1;
+  for (int i = 0; i < rows; i++) {
+    free(ptr[i]);
+  }
+  free(ptr);
+
+  printf("Memória desalocada com sucesso\n");
+}
+
+void read_matrix(int** matrix, int rows, int cols, char name) {
+  printf("\nDigite os elementos da matriz %c (%dx%d):\n", name, rows, cols);
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      printf("Elemento [%d][%d]: ", i, j);
+      scanf("%d", &matrix[i][j]);
+    }
+  }
+}
+
+void print_matrix(int** matrix, int rows, int cols, char name) {
+  printf("\nMatriz %c:\n", name);
+  
+  for (int i = 0; i < rows; i++) {
+    for (int j = 0; j < cols; j++) {
+      bool is_tl = i == 0 && j == 0;
+      bool is_tr = i == 0 && j == cols - 1;
+      bool is_bl = i == rows - 1 && j == 0;
+      bool is_br = i == rows - 1 && j == cols - 1;
+      bool is_middle_line = 0 < i && i < rows - 1;
 
       if (is_tl) {
         printf("\xE2\x8C\x88");
       } else if (is_bl) {
-        printf("\xE2\x8C\x8A");
-      }
-
-      if (is_middle_line && q == 0) {
-        printf("|"); // lpipe
-      }
-
-      printf(" %d ", C[p][q]);
-
-      if (is_middle_line && q == d_len - 1) {
-        printf("|\n"); // rpipe
-      }
-
-      if (is_tr) {
-        printf("\xE2\x8C\x89\n");
-      } else if (is_br) {
         printf("\xE2\x8C\x8B");
       }
+
+      if (is_middle_line && j == 0) {
+        printf("|");
+      }
+
+      printf(" %3d ", matrix[i][j]);
+
+      if (is_middle_line && j == cols - 1) {
+        printf("|\n");
+      } else if (is_tr) {
+        printf("\xE2\x8C\x89\n");
+      } else if (is_br) {
+        printf("\xE2\x8C\x8A\n");
+      }
+
+      /* 
+      Códigos Unicode para os pipes:
+      U+2308 TL \xE2\x8C\x88
+      U+2309 TR \xE2\x8C\x89
+      U+230A BL \xE2\x8C\x8A
+      U+230B BR \xE2\x8C\x8B
+      */
     }
   }
+}
 
-  /* 
-    Unicode for closing pipes:
-    U+2308 TL \xE2\x8C\x88
-    U+2309 TR \xE2\x8C\x89
-    U+230A BL \xE2\x8C\x8A
-    U+230B BR \xE2\x8C\x8B
-  */
+int main() {
+  setlocale(LC_ALL, "Portuguese");
 
+  do {
+    int m, n, p, r;
+
+    printf("=== MULTIPLICAÇÃO DE MATRIZES ===\n\n");
+    printf("Para multiplicar A x B, o número de colunas de A deve ser igual ao número de linhas de B\n\n");
+    
+    printf("Digite as dimensões MxN da matriz A: ");
+    scanf("%d %d", &m, &n);
+
+    printf("Digite as dimensões PxR da matriz B: ");
+    scanf("%d %d", &p, &r);
+
+    // Verificação da compatibilidade das dimensões
+    if (n != p) {
+        printf("\nERRO: As dimensões das matrizes não permitem multiplicação!\n");
+        printf("Matriz A: %dx%d, Matriz B: %dx%d\n", m, n, p, r);
+        printf("Para multiplicar A x B, o número de colunas de A (%d) deve ser igual ao número de linhas de B (%d)\n", n, p);
+        return 1;
+    }
+
+    // Alocação das matrizes
+    int **A = alloc_matrix(m, n);
+    int **B = alloc_matrix(p, r);
+    int **C = alloc_matrix(m, r);  // Matriz resultado é MxR
+
+    if (!A || !B || !C) {
+      printf("Erro na alocação de memória!\n");
+      return 1;
+    }
+
+    // Leitura das matrizes
+    read_matrix(A, m, n, 'A');
+    read_matrix(B, p, r, 'B');
+
+    // Multiplicação das matrizes: C = A x B
+    printf("\nCalculando o produto A x B...\n");
+    
+    for(int i = 0; i < m; i++) {        // Para cada linha de A
+      for(int j = 0; j < r; j++) {      // Para cada coluna de B
+        int sum = 0;
+        for(int k = 0; k < n; k++) {
+          sum += A[i][k] * B[k][j];
+        }
+        C[i][j] = sum;
+      }
+    }
+
+    // Exibição dos resultados 
+    print_matrix(A, m, n, 'A');
+    print_matrix(B, p, r, 'B');
+    printf("\nResultado da multiplicação A x B:\n");
+    print_matrix(C, m, r, 'C');
+
+    // Liberação da memória
+    free_matrix(A, m);
+    free_matrix(B, p);
+    free_matrix(C, m);
+    printf("\n");
+
+    printf("=== Deseja calcular outra matriz? ===\n");
+    printf("=== Digite 1 para outra matriz ===\n");
+    printf("=== Digite 0 para sair ===\n");
+
+    int cmd;
+    scanf("%d", &cmd);
+
+    if (cmd == 0) break;
+
+  } while (1); // Executa repetidamente até o usuário digitar 0
+  
+  printf("\nPrograma finalizado com sucesso!\n");
   return 0;
 }
