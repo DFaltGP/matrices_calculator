@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <locale.h>
 
+/*
+  Função responsável por alocar dinamicamente um vetor MxN.
+  Retorna um ponteiro para outro ponteiro de inteiros (int**).
+*/ 
 int** alloc_matrix(int rows, int cols) {
   int** ptr = malloc(rows * sizeof(int*));
   if (!ptr) {
@@ -26,6 +30,10 @@ int** alloc_matrix(int rows, int cols) {
   return ptr;
 }
 
+/*
+  Função responsável por liberar a matrix declarada com 'alloc_matrix' 
+  da memória.
+*/
 void free_matrix(int** ptr, int rows) {
   if (ptr == NULL) return;
   
@@ -37,6 +45,11 @@ void free_matrix(int** ptr, int rows) {
   printf("Memória desalocada com sucesso\n");
 }
 
+
+/*
+  Função responsável por ler os valores da matriz
+  informados pelo usuário.
+*/
 void read_matrix(int** matrix, int rows, int cols, char name) {
   printf("\nDigite os elementos da matriz %c (%dx%d):\n", name, rows, cols);
   for (int i = 0; i < rows; i++) {
@@ -47,6 +60,13 @@ void read_matrix(int** matrix, int rows, int cols, char name) {
   }
 }
 
+
+/*
+  Função responsável por printar uma matriz seguindo o padrão abaixo:
+    ⌈ 1 0 0 ⌉
+    | 0 1 0 |
+    ⌊ 0 0 1 ⌋
+*/
 void print_matrix(int** matrix, int rows, int cols, char name) {
   printf("\nMatriz %c:\n", name);
   
